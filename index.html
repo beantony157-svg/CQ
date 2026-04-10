@@ -1,0 +1,1642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CQ Answer System v3 — Part C & D Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #1a1410;
+  --ink-soft: #4a3f35;
+  --ink-faint: #8a7d72;
+  --paper: #fdf8f2;
+  --paper-warm: #f5ede0;
+  --paper-mid: #ede3d6;
+  --paper-deep: #e2d5c3;
+  --rule: #d5c9b8;
+  --rule-soft: #e8ddd0;
+  --accent: #c0392b;
+  --accent-dark: #962d23;
+  --accent-glow: #f5c6c2;
+  --blue: #1a5276;
+  --blue-light: #d6e8f7;
+  --green: #0e6655;
+  --green-light: #d5f0e8;
+  --orange: #854f0b;
+  --orange-light: #faeeda;
+  --purple: #4a3f8f;
+  --purple-light: #eeedfe;
+
+  --font-serif: 'Libre Baskerville', Georgia, serif;
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 16px;
+
+  --shadow-sm: 0 1px 3px rgba(26,20,16,.08), 0 1px 2px rgba(26,20,16,.06);
+  --shadow-md: 0 4px 12px rgba(26,20,16,.10), 0 2px 4px rgba(26,20,16,.06);
+  --shadow-lg: 0 8px 32px rgba(26,20,16,.12), 0 2px 8px rgba(26,20,16,.08);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* ── NOISE TEXTURE OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── HEADER ── */
+.site-header {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 0;
+  position: sticky; top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 16px rgba(26,20,16,.25);
+}
+.header-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+}
+.logo {
+  display: flex; align-items: center; gap: 10px;
+}
+.logo-badge {
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--font-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+.logo-name {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  color: var(--paper-warm);
+  font-weight: 700;
+  letter-spacing: .01em;
+}
+.logo-version {
+  font-size: 11px;
+  color: var(--ink-faint);
+  font-weight: 400;
+  margin-left: 2px;
+}
+.header-meta {
+  font-size: 12px;
+  color: #8a7d72;
+}
+
+/* ── HERO BAND ── */
+.hero {
+  background: linear-gradient(135deg, #1a1410 0%, #2d1f14 40%, #1a2a3d 100%);
+  color: var(--paper);
+  padding: 52px 24px 44px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  right: -60px; top: -60px;
+  width: 320px; height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(192,57,43,.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  position: relative; z-index: 1;
+}
+.hero-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+.hero-title {
+  font-family: var(--font-serif);
+  font-size: clamp(26px, 4vw, 40px);
+  font-weight: 700;
+  line-height: 1.2;
+  color: #fdf8f2;
+  margin-bottom: 16px;
+}
+.hero-title em {
+  font-style: italic;
+  color: #f5c6c2;
+}
+.hero-subtitle {
+  font-size: 15px;
+  color: #b0a090;
+  max-width: 560px;
+  line-height: 1.7;
+  margin-bottom: 28px;
+}
+.hero-chips {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.chip {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .04em;
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,.15);
+  color: rgba(255,255,255,.7);
+  background: rgba(255,255,255,.06);
+}
+
+/* ── HOW-TO GUIDE ── */
+.guide-section {
+  background: var(--paper-warm);
+  border-bottom: 1px solid var(--rule);
+  padding: 36px 24px;
+}
+.guide-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.section-eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+.section-title {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 24px;
+}
+.guide-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.guide-step {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  padding: 18px 16px;
+  position: relative;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow .18s, transform .18s;
+}
+.guide-step:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+.step-num {
+  width: 28px; height: 28px;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+  margin-bottom: 10px;
+  font-family: var(--font-serif);
+}
+.step-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 5px;
+}
+.step-desc {
+  font-size: 12px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+
+.guide-tabs-legend {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  padding: 18px 20px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+}
+.legend-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 12px;
+  letter-spacing: .04em;
+}
+.tab-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px;
+}
+.tab-item {
+  display: flex; gap: 8px; align-items: flex-start;
+}
+.tab-dot {
+  width: 8px; height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+.tab-info-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.tab-info-desc {
+  font-size: 11px;
+  color: var(--ink-faint);
+  margin-top: 1px;
+}
+
+.guide-color-legend {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  padding: 14px 20px;
+  box-shadow: var(--shadow-sm);
+}
+.color-dots {
+  display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px;
+}
+.cdot { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-soft); }
+.cdot-circle { width: 10px; height: 10px; border-radius: 2px; }
+
+/* ── APP CONTAINER ── */
+.app-wrapper {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 28px 24px 60px;
+  position: relative; z-index: 1;
+}
+
+/* ── APP SHELL ── */
+.app-shell {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.app-titlebar {
+  background: var(--paper-mid);
+  border-bottom: 1px solid var(--rule);
+  padding: 14px 20px;
+  display: flex; align-items: center; gap: 12px;
+}
+.win-dots { display: flex; gap: 5px; }
+.win-dot { width: 11px; height: 11px; border-radius: 50%; }
+.win-dot-r { background: #ff5f57; }
+.win-dot-y { background: #febc2e; }
+.win-dot-g { background: #28c840; }
+.titlebar-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-faint);
+  font-family: var(--font-sans);
+  flex: 1;
+  text-align: center;
+}
+
+/* ── TABS ── */
+.tabs-bar {
+  display: flex;
+  gap: 6px;
+  padding: 16px 20px 0;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--rule-soft);
+  background: var(--paper-warm);
+}
+.tab-btn {
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  background: transparent;
+  cursor: pointer;
+  color: var(--ink-faint);
+  transition: all .15s;
+  position: relative;
+  bottom: -1px;
+}
+.tab-btn.on {
+  background: var(--paper);
+  color: var(--blue);
+  border-color: var(--rule);
+  border-bottom-color: var(--paper);
+  font-weight: 600;
+}
+.tab-btn:hover:not(.on) {
+  background: var(--paper-deep);
+  color: var(--ink-soft);
+}
+
+/* ── PANES ── */
+.pane { display: none; }
+.pane.on { display: block; }
+.pane-inner { padding: 24px 20px; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--paper);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--r-md);
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+}
+.card:last-child { margin-bottom: 0; }
+
+/* ── LABELS ── */
+.sec-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 14px 0 10px;
+}
+.sec-label:first-child { margin-top: 0; }
+
+/* ── TOGGLE ROW ── */
+.toggle-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  align-items: center;
+}
+.tog-label {
+  font-size: 12px;
+  color: var(--ink-soft);
+  font-weight: 500;
+  min-width: 100px;
+}
+.tog-btn {
+  font-size: 12px;
+  padding: 6px 16px;
+  border: 1px solid var(--rule);
+  border-radius: 20px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--ink-soft);
+  transition: all .15s;
+  font-family: var(--font-sans);
+}
+.tog-btn.on {
+  background: var(--blue);
+  color: #fff;
+  border-color: var(--blue);
+  box-shadow: 0 2px 8px rgba(26,82,118,.25);
+}
+.tog-btn:hover:not(.on) { background: var(--paper-warm); }
+
+/* ── INPUT GRID ── */
+.input-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+@media(max-width:520px) { .input-grid { grid-template-columns: 1fr; } }
+
+.field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .05em;
+  margin-bottom: 5px;
+}
+.field input, .field textarea {
+  width: 100%;
+  font-size: 13px;
+  font-family: var(--font-sans);
+  padding: 8px 11px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-sm);
+  background: var(--paper-warm);
+  color: var(--ink);
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.field input:focus, .field textarea:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(26,82,118,.1);
+  background: var(--paper);
+}
+.field textarea {
+  resize: vertical;
+  min-height: 52px;
+  line-height: 1.5;
+}
+
+/* ── LABEL COLORS ── */
+.lbl-stem { color: var(--blue); }
+.lbl-book { color: var(--green); }
+.lbl-char { color: #993C1D; }
+.lbl-theme { color: var(--purple); }
+.lbl-depth { color: var(--orange); }
+
+/* ── FALLBACK BAR ── */
+.fb-bar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.fb-btn {
+  font-size: 11px;
+  padding: 5px 13px;
+  border: 1px solid var(--rule);
+  border-radius: 20px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--ink-soft);
+  font-family: var(--font-sans);
+  transition: all .15s;
+}
+.fb-btn:hover { background: var(--paper-warm); color: var(--ink); }
+
+/* ── COLOR LEGEND ── */
+.legend {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  background: var(--paper-warm);
+  border-radius: var(--r-sm);
+  margin-top: 6px;
+  border: 1px solid var(--rule-soft);
+}
+.leg { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--ink-soft); }
+.dot { width: 9px; height: 9px; border-radius: 2px; }
+
+/* ── CHANGE LEGEND ── */
+.change-legend {
+  display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px;
+}
+.cl-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-soft); }
+.cl-bar { width: 14px; height: 14px; border-radius: 3px; }
+
+/* ── COUNT ROW ── */
+.count-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.count-box {
+  background: var(--paper-warm);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--r-sm);
+  padding: 6px 14px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.count-box span { font-weight: 600; color: var(--ink); }
+
+/* ── SENTENCE LIST ── */
+.para-head { display: flex; align-items: center; gap: 8px; margin: 16px 0 10px; }
+.para-tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: var(--r-sm);
+  font-family: var(--font-sans);
+  letter-spacing: .02em;
+}
+.pt-1 { background: var(--green-light); color: var(--green); }
+.pt-2 { background: var(--blue-light); color: var(--blue); }
+.pt-3 { background: var(--purple-light); color: var(--purple); }
+.pt-4 { background: var(--orange-light); color: var(--orange); }
+
+.sent-row {
+  display: flex;
+  gap: 10px;
+  padding: 8px 2px;
+  border-bottom: 1px solid var(--rule-soft);
+  align-items: flex-start;
+}
+.sent-row:last-of-type { border-bottom: none; }
+
+.sent-row.modified {
+  background: rgba(250,238,218,.35);
+  border-left: 2.5px solid #EF9F27;
+  padding-left: 10px;
+  margin-left: -10px;
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  border-bottom-color: transparent;
+}
+.sent-row.optional {
+  background: rgba(213,240,232,.35);
+  border-left: 2.5px solid #5DCAA5;
+  padding-left: 10px;
+  margin-left: -10px;
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  border-bottom-color: transparent;
+}
+
+.sn {
+  min-width: 22px; height: 22px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 600;
+  flex-shrink: 0; margin-top: 4px;
+  font-family: var(--font-serif);
+}
+.sn-f { background: var(--blue-light); color: var(--blue); }
+.sn-x { background: var(--paper-mid); color: var(--ink-faint); }
+.sn-e { background: var(--green-light); color: var(--green); }
+.sn-o { background: rgba(213,240,232,.7); color: var(--green); }
+
+.sent-text {
+  font-size: 14px;
+  line-height: 2;
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+.eng {
+  font-size: 11px;
+  color: var(--ink-faint);
+  margin-top: 2px;
+  font-style: italic;
+  font-family: var(--font-serif);
+  line-height: 1.5;
+}
+
+/* ── VALUE SPANS ── */
+.v-stem { color: var(--blue); font-weight: 600; border-bottom: 2px solid rgba(26,82,118,.3); }
+.v-book { color: var(--green); font-weight: 600; border-bottom: 2px solid rgba(14,102,85,.3); }
+.v-char { color: #993C1D; font-weight: 600; border-bottom: 2px solid rgba(153,60,29,.3); }
+.v-theme { color: var(--purple); font-weight: 600; border-bottom: 2px solid rgba(74,63,143,.3); }
+.v-depth { color: var(--orange); font-weight: 600; border-bottom: 2px solid rgba(133,79,11,.3); }
+.v-empty { color: var(--ink-faint); font-style: italic; border-bottom: 2px dashed var(--rule); }
+
+/* ── TAGS ── */
+.fixed-tag {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--green);
+  background: var(--green-light);
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-left: 5px;
+  vertical-align: middle;
+  letter-spacing: .04em;
+}
+.mod-tag {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--orange);
+  background: var(--orange-light);
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-left: 5px;
+  vertical-align: middle;
+  letter-spacing: .04em;
+}
+.opt-tag {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--green);
+  background: var(--green-light);
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-left: 5px;
+  vertical-align: middle;
+  letter-spacing: .04em;
+}
+.key-tag {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--accent-dark);
+  background: var(--accent-glow);
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-left: 5px;
+  vertical-align: middle;
+  letter-spacing: .04em;
+}
+
+/* ── TIP BOXES ── */
+.tip-box {
+  background: var(--orange-light);
+  border-radius: var(--r-sm);
+  padding: 12px 16px;
+  font-size: 13px;
+  color: #633806;
+  margin-top: 14px;
+  line-height: 1.7;
+  border-left: 3px solid #EF9F27;
+  font-family: var(--font-serif);
+}
+.new-tip {
+  background: var(--green-light);
+  border-radius: var(--r-sm);
+  padding: 12px 16px;
+  font-size: 13px;
+  color: #085041;
+  margin-top: 14px;
+  line-height: 1.7;
+  border-left: 3px solid #5DCAA5;
+  font-family: var(--font-serif);
+}
+
+/* ── PREVIEW ── */
+.marks-sw { display: flex; gap: 6px; margin-bottom: 14px; }
+.msw {
+  padding: 7px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  background: transparent;
+  color: var(--ink-soft);
+  transition: all .15s;
+}
+.msw.on {
+  background: var(--blue);
+  color: #fff;
+  border-color: var(--blue);
+  box-shadow: 0 2px 8px rgba(26,82,118,.25);
+}
+
+.preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.copy-btn {
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  padding: 7px 16px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  background: var(--paper-warm);
+  color: var(--ink-soft);
+  transition: all .15s;
+  display: flex; align-items: center; gap: 6px;
+}
+.copy-btn:hover { background: var(--paper-mid); color: var(--ink); }
+.copy-btn.copied { background: var(--green); color: #fff; border-color: var(--green); }
+
+.preview-area {
+  background: var(--paper-warm);
+  border-radius: var(--r-md);
+  padding: 20px 20px;
+  font-size: 15px;
+  line-height: 2.2;
+  color: var(--ink);
+  border-left: 4px solid var(--blue);
+  white-space: pre-wrap;
+  font-family: var(--font-serif);
+  box-shadow: inset 0 1px 3px rgba(26,20,16,.06);
+  min-height: 120px;
+}
+
+.panic-card {
+  background: #fff8e7;
+  border: 1px solid #f5d870;
+  border-radius: var(--r-md);
+  padding: 16px 18px;
+  margin-top: 16px;
+}
+.panic-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: #9a6f00;
+  margin-bottom: 8px;
+}
+.panic-text {
+  font-size: 15px;
+  line-height: 2;
+  color: var(--ink);
+  font-family: var(--font-serif);
+}
+
+/* ── DEPTH TAB ── */
+.depth-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+@media(max-width:520px) { .depth-grid { grid-template-columns: 1fr; } }
+
+.depth-pill {
+  background: var(--paper-warm);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  cursor: pointer;
+  border: 1px solid var(--rule);
+  transition: all .15s;
+  position: relative;
+}
+.depth-pill:hover {
+  border-color: #EF9F27;
+  background: rgba(250,238,218,.5);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+.depth-pill.sel {
+  border-color: #EF9F27;
+  background: var(--orange-light);
+  box-shadow: 0 0 0 3px rgba(239,159,39,.15);
+}
+.depth-pill-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 5px;
+}
+.depth-pill.sel .depth-pill-label { color: var(--orange); }
+.depth-pill-val {
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.6;
+  font-family: var(--font-serif);
+}
+.depth-pill.sel .depth-pill-val { color: #412402; }
+.copied-flash {
+  position: absolute;
+  top: 8px; right: 10px;
+  font-size: 10px; font-weight: 600;
+  color: var(--green);
+  opacity: 0;
+  transition: opacity .2s;
+}
+.depth-pill.sel .copied-flash { opacity: 1; }
+
+.theme-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+@media(max-width:480px) { .theme-compare { grid-template-columns: 1fr; } }
+
+.theme-box {
+  background: var(--paper-warm);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  border: 1px solid var(--rule-soft);
+}
+.theme-box-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.theme-box-label.bad { color: #A32D2D; }
+.theme-box-label.good { color: var(--green); }
+.theme-words {
+  font-size: 13px;
+  line-height: 2;
+  font-family: var(--font-serif);
+}
+.theme-words.bad { color: var(--ink-faint); }
+.theme-words.good { color: var(--ink); }
+
+/* ── FOOTER ── */
+.site-footer {
+  background: var(--ink);
+  color: rgba(255,255,255,.4);
+  text-align: center;
+  padding: 20px 24px;
+  font-size: 12px;
+}
+.site-footer strong { color: rgba(255,255,255,.7); }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.pane.on .card {
+  animation: fadeUp .22s ease both;
+}
+.pane.on .card:nth-child(2) { animation-delay: .06s; }
+.pane.on .card:nth-child(3) { animation-delay: .12s; }
+
+/* ── RESPONSIVE ── */
+@media(max-width:600px) {
+  .pane-inner { padding: 16px 14px; }
+  .app-titlebar { padding: 10px 14px; }
+  .tabs-bar { padding: 12px 14px 0; gap: 4px; }
+  .tab-btn { padding: 7px 12px; font-size: 12px; }
+  .preview-area { font-size: 14px; }
+}
+
+/* ── SCROLL BAR STYLING ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--paper-warm); }
+::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="logo">
+      <span class="logo-badge">CQ</span>
+      <span class="logo-name">Answer System <span class="logo-version">v3</span></span>
+    </div>
+    <div class="header-meta">Part C &amp; D Builder</div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">Bangla Literature Exam Tool</div>
+    <h1 class="hero-title">Build your <em>CQ answer</em><br>in under 2 minutes</h1>
+    <p class="hero-subtitle">Fill four short phrases — the system builds your full Part C (3 marks) and Part D (4 marks) answer in Bengali, sentence by sentence, ready to copy.</p>
+    <div class="hero-chips">
+      <span class="chip">Part C · 3 marks · 12 sentences</span>
+      <span class="chip">Part D · 4 marks · 20 sentences</span>
+      <span class="chip">Character &amp; no-character modes</span>
+      <span class="chip">Transformation support</span>
+      <span class="chip">5 depth phrases</span>
+    </div>
+  </div>
+</section>
+
+<!-- HOW TO USE GUIDE -->
+<section class="guide-section">
+  <div class="guide-inner">
+    <div class="section-eyebrow">How to use this tool</div>
+    <h2 class="section-title">5 steps to a complete answer</h2>
+
+    <div class="guide-steps">
+      <div class="guide-step">
+        <div class="step-num">1</div>
+        <div class="step-title">Set the mode</div>
+        <div class="step-desc">Choose whether your question has a <strong>character</strong> (person/animal) or not (nature, poem, abstract). Then choose if there is a <strong>transformation</strong> (before → after change).</div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">2</div>
+        <div class="step-title">Fill 4 details</div>
+        <div class="step-desc">Enter the <strong>stem situation</strong> (what the CQ uddiapak describes), the <strong>book/poem name</strong>, the <strong>character or subject</strong>, and a rich <strong>theme phrase</strong> (2–5 words, not 1 word).</div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">3</div>
+        <div class="step-title">Read Part C or D</div>
+        <div class="step-desc">Switch to the <strong>Part C</strong> or <strong>Part D</strong> tab to see your answer built sentence by sentence. Orange = upgraded sentence. Green = optional insert.</div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">4</div>
+        <div class="step-title">Copy the answer</div>
+        <div class="step-desc">Go to the <strong>Live Answer</strong> tab, pick Part C or D, and press <strong>Copy answer</strong>. Paste directly into your answer sheet or digital document.</div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">5</div>
+        <div class="step-title">Add depth (optional)</div>
+        <div class="step-desc">Visit the <strong>Depth phrases</strong> tab for 5 universal bonus sentences — tap any to copy it. Insert between sentences 9–10 to make your answer stand out.</div>
+      </div>
+    </div>
+
+    <div class="guide-tabs-legend">
+      <div class="legend-title">What each tab does</div>
+      <div class="tab-list">
+        <div class="tab-item">
+          <div class="tab-dot" style="background:#1a5276"></div>
+          <div>
+            <div class="tab-info-name">Fill details</div>
+            <div class="tab-info-desc">Enter your 4 inputs &amp; set mode</div>
+          </div>
+        </div>
+        <div class="tab-item">
+          <div class="tab-dot" style="background:#0e6655"></div>
+          <div>
+            <div class="tab-info-name">Part C</div>
+            <div class="tab-info-desc">3-mark answer · 12 sentences · 3 paragraphs</div>
+          </div>
+        </div>
+        <div class="tab-item">
+          <div class="tab-dot" style="background:#4a3f8f"></div>
+          <div>
+            <div class="tab-info-name">Part D</div>
+            <div class="tab-info-desc">4-mark answer · 20 sentences · 4 paragraphs</div>
+          </div>
+        </div>
+        <div class="tab-item">
+          <div class="tab-dot" style="background:#c0392b"></div>
+          <div>
+            <div class="tab-info-name">Live Answer</div>
+            <div class="tab-info-desc">Full compiled answer to copy</div>
+          </div>
+        </div>
+        <div class="tab-item">
+          <div class="tab-dot" style="background:#854f0b"></div>
+          <div>
+            <div class="tab-info-name">Depth phrases</div>
+            <div class="tab-info-desc">5 bonus sentences + theme phrase guide</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="guide-color-legend">
+      <div class="legend-title">Color coding in sentence views</div>
+      <div class="color-dots">
+        <div class="cdot"><div class="cdot-circle" style="background:#1a5276"></div>Stem situation</div>
+        <div class="cdot"><div class="cdot-circle" style="background:#0e6655"></div>Book / poem name</div>
+        <div class="cdot"><div class="cdot-circle" style="background:#993C1D"></div>Character / subject</div>
+        <div class="cdot"><div class="cdot-circle" style="background:#4a3f8f"></div>Theme phrase</div>
+        <div class="cdot"><div class="cdot-circle" style="background:#854f0b"></div>Depth / transformation</div>
+        <div class="cdot"><div class="cdot-circle" style="background:#EF9F27;border-radius:2px;width:14px"></div>Upgraded sentence</div>
+        <div class="cdot"><div class="cdot-circle" style="background:#5DCAA5;border-radius:2px;width:14px"></div>Optional insert</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- APP WRAPPER -->
+<div class="app-wrapper">
+  <div class="app-shell">
+
+    <!-- TITLE BAR -->
+    <div class="app-titlebar">
+      <div class="win-dots">
+        <div class="win-dot win-dot-r"></div>
+        <div class="win-dot win-dot-y"></div>
+        <div class="win-dot win-dot-g"></div>
+      </div>
+      <div class="titlebar-text">CQ Answer System v3 — Neutral Template (Part C &amp; D)</div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs-bar">
+      <button class="tab-btn on" onclick="sw('fill',this)">Fill details</button>
+      <button class="tab-btn" onclick="sw('partC',this)">Part C</button>
+      <button class="tab-btn" onclick="sw('partD',this)">Part D</button>
+      <button class="tab-btn" onclick="sw('preview',this)">Live answer</button>
+      <button class="tab-btn" onclick="sw('depth',this)">Depth phrases</button>
+    </div>
+
+    <!-- ═══════════ FILL DETAILS ═══════════ -->
+    <div id="p-fill" class="pane on">
+      <div class="pane-inner">
+
+        <div class="card">
+          <div class="sec-label">Mode — what type of question is this?</div>
+          <div class="toggle-row">
+            <span class="tog-label">Has character?</span>
+            <button class="tog-btn on" id="tog-char" onclick="setMode('char',this)">Yes — has character</button>
+            <button class="tog-btn" id="tog-nochar" onclick="setMode('nochar',this)">No — nature / abstract / poem</button>
+          </div>
+          <div class="toggle-row">
+            <span class="tog-label">Has transformation?</span>
+            <button class="tog-btn on" id="tog-notrans" onclick="setMode('notrans',this)">No change (default)</button>
+            <button class="tog-btn" id="tog-trans" onclick="setMode('trans',this)">Yes — before vs after change</button>
+          </div>
+
+        </div>
+
+        <div class="card">
+          <div class="sec-label">Your 4 inputs — short phrases, not single words</div>
+          <div class="input-grid">
+            <div class="field">
+              <label class="lbl-stem">Stem situation (2–5 words)</label>
+              <input id="i-stem" placeholder="e.g. একটি ছেলের আত্মত্যাগ" oninput="upd()">
+            </div>
+            <div class="field">
+              <label class="lbl-book">Book / poem name</label>
+              <input id="i-book" placeholder="e.g. মা / আমার পরিচয়" oninput="upd()">
+            </div>
+            <div class="field" id="char-field">
+              <label class="lbl-char">Character (or subject if no character)</label>
+              <input id="i-char" placeholder="e.g. মা / প্রকৃতি / কবি" oninput="upd()">
+            </div>
+            <div class="field">
+              <label class="lbl-theme">Theme idea (2–5 words — not 1 word)</label>
+              <input id="i-theme" placeholder="e.g. গভীর মাতৃভালোবাসা / প্রকৃতির রূপ পরিবর্তন" oninput="upd()">
+            </div>
+          </div>
+
+          <div id="trans-field" style="display:none;margin-bottom:14px">
+            <div class="field">
+              <label class="lbl-depth">Transformation — before state (2–4 words)</label>
+              <input id="i-before" placeholder="e.g. অন্ধকারাচ্ছন্ন জীবন" oninput="upd()" style="margin-bottom:8px">
+              <label class="lbl-depth" style="margin-top:6px;display:block">Transformation — after state (2–4 words)</label>
+              <input id="i-after" placeholder="e.g. আলোকিত নতুন পথ" oninput="upd()">
+            </div>
+          </div>
+
+          <div class="sec-label">Stuck? Use a fallback</div>
+          <div class="fb-bar">
+            <button class="fb-btn" onclick="fb('stem','উদ্দীপকের পরিস্থিতি')">Stem fallback</button>
+            <button class="fb-btn" onclick="fb('book','এই রচনা')">No book name</button>
+            <button class="fb-btn" onclick="fb('char','কেন্দ্রীয় বিষয়')">No character</button>
+            <button class="fb-btn" onclick="fb('theme','গভীর মানবিক অনুভূতি')">No theme phrase</button>
+            <button class="fb-btn" onclick="fbAll()">Fill all</button>
+          </div>
+
+          <div class="legend">
+            <div class="leg"><div class="dot" style="background:#1a5276"></div>stem</div>
+            <div class="leg"><div class="dot" style="background:#0e6655"></div>book</div>
+            <div class="leg"><div class="dot" style="background:#D85A30"></div>character / subject</div>
+            <div class="leg"><div class="dot" style="background:#7F77DD"></div>theme phrase</div>
+            <div class="leg"><div class="dot" style="background:#EF9F27"></div>depth / transformation</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══════════ PART C ═══════════ -->
+    <div id="p-partC" class="pane">
+      <div class="pane-inner">
+        <div class="card">
+          <div class="change-legend">
+            <div class="cl-item"><div class="cl-bar" style="background:#FAEEDA;border:1px solid #EF9F27"></div>upgraded sentence</div>
+            <div class="cl-item"><div class="cl-bar" style="background:#E1F5EE;border:1px solid #5DCAA5"></div>optional insert</div>
+          </div>
+          <div class="count-row">
+            <div class="count-box">Part C <span>3 marks</span></div>
+            <div class="count-box">Paragraphs <span>3</span></div>
+            <div class="count-box">Sentences <span>12</span></div>
+          </div>
+
+          <div class="para-head"><span class="para-tag pt-1">Paragraph 1 — 1 sentence</span></div>
+          <div class="sent-row modified">
+            <div class="sn sn-f">1</div>
+            <div>
+              <div class="sent-text">উদ্দীপকে <span id="c1-s1a" class="v-empty">[stem]</span>-এর যে চিত্র উপস্থাপিত হয়েছে, তার সাথে "<span id="c1-s1b" class="v-empty">[book]</span>"-এর গভীর মিল রয়েছে। <span class="mod-tag">upgraded</span></div>
+              <div class="eng">The picture of [stem] presented in the stem has a deep similarity with "[book]".</div>
+            </div>
+          </div>
+
+          <div class="para-head"><span class="para-tag pt-2">Paragraph 2 — 6 sentences</span></div>
+          <div class="sent-row">
+            <div class="sn sn-x">2</div>
+            <div>
+              <div class="sent-text">"<span id="c1-s2a" class="v-empty">[book]</span>"-এ <span id="c1-s2b" class="v-empty">[theme phrase]</span> বিষয়টি সুন্দরভাবে তুলে ধরা হয়েছে।</div>
+              <div class="eng">In "[book]", the idea of [theme phrase] has been beautifully presented.</div>
+            </div>
+          </div>
+          <div class="sent-row modified" id="s3-row">
+            <div class="sn sn-x">3</div>
+            <div id="s3-content">
+              <div class="sent-text" id="s3-text">সেখানে <span id="c1-s3a" class="v-empty">[char]</span>-এর মাধ্যমে <span id="c1-s3b" class="v-empty">[theme phrase]</span>-এর প্রকাশ ঘটেছে। <span class="mod-tag">upgraded</span></div>
+              <div class="eng" id="s3-eng">Through [char], the expression of [theme phrase] has emerged.</div>
+            </div>
+          </div>
+          <div class="sent-row modified">
+            <div class="sn sn-x">4</div>
+            <div>
+              <div class="sent-text" id="s4-text">এই <span id="c1-s4a" class="v-empty">[theme phrase]</span> আমাদের জীবনের গভীর সত্যকে তুলে ধরে। <span class="mod-tag">upgraded — no character needed</span></div>
+              <div class="eng">This [theme phrase] reveals the deeper truth of our life.</div>
+            </div>
+          </div>
+          <div class="sent-row">
+            <div class="sn sn-x">5</div>
+            <div>
+              <div class="sent-text">এই ভাবটি পাঠকের মনে গভীর অনুভূতি জাগিয়ে তোলে।</div>
+              <div class="eng">This idea awakens a deep feeling in the reader's mind. ← fully fixed, zero blanks</div>
+            </div>
+          </div>
+          <div class="sent-row optional" id="trans-row-c" style="display:none">
+            <div class="sn sn-o">6*</div>
+            <div>
+              <div class="sent-text"><span id="c1-s6ta" class="v-empty">[before]</span> থেকে <span id="c1-s6tb" class="v-empty">[after]</span>-এ এই পরিবর্তন <span id="c1-s6tc" class="v-empty">[theme phrase]</span>-এর শক্তিকে প্রমাণ করে। <span class="opt-tag">optional — use if transformation</span></div>
+              <div class="eng">[before] to [after] — this change proves the power of [theme phrase].</div>
+            </div>
+          </div>
+          <div class="sent-row" id="s6-normal">
+            <div class="sn sn-x">6</div>
+            <div>
+              <div class="sent-text"><span id="c1-s6a" class="v-empty">[book]</span>-এ এই সত্যটি অত্যন্ত প্রাসঙ্গিকভাবে উপস্থাপিত হয়েছে।</div>
+              <div class="eng">In "[book]", this truth has been presented in a very relevant way.</div>
+            </div>
+          </div>
+          <div class="sent-row">
+            <div class="sn sn-e">7</div>
+            <div>
+              <div class="sent-text">উভয় ক্ষেত্রেই <span id="c1-s7a" class="v-empty">[theme phrase]</span> প্রকাশ পেয়েছে। <span class="fixed-tag">fixed ending</span></div>
+              <div class="eng">In both cases, [theme phrase] has been expressed.</div>
+            </div>
+          </div>
+
+          <div class="para-head"><span class="para-tag pt-3">Paragraph 3 — 5 sentences</span></div>
+          <div class="sent-row">
+            <div class="sn sn-x">8</div>
+            <div>
+              <div class="sent-text">উদ্দীপকে <span id="c1-s8a" class="v-empty">[stem]</span>-এর কথা বলা হয়েছে।</div>
+              <div class="eng">In the stem, [stem] has been discussed.</div>
+            </div>
+          </div>
+          <div class="sent-row">
+            <div class="sn sn-x">9</div>
+            <div>
+              <div class="sent-text">সেখানেও <span id="c1-s9a" class="v-empty">[theme phrase]</span> স্পষ্টভাবে অনুভব করা যায়।</div>
+              <div class="eng">There too, [theme phrase] can be clearly felt.</div>
+            </div>
+          </div>
+          <div class="sent-row modified">
+            <div class="sn sn-x">10</div>
+            <div>
+              <div class="sent-text">একইভাবে "<span id="c1-s10a" class="v-empty">[book]</span>"-এও <span id="c1-s10b" class="v-empty">[theme phrase]</span>-এর এই রূপ দেখা যায়। <span class="mod-tag">upgraded — removed character dependency</span></div>
+              <div class="eng">Similarly, in "[book]" too, this form of [theme phrase] is seen.</div>
+            </div>
+          </div>
+          <div class="sent-row">
+            <div class="sn sn-x">11</div>
+            <div>
+              <div class="sent-text">উদ্দীপক ও পাঠ্যপুস্তক উভয় জায়গায় <span id="c1-s11a" class="v-empty">[theme phrase]</span> একটি কেন্দ্রীয় বিষয় হিসেবে উপস্থিত।</div>
+              <div class="eng">In both the stem and textbook, [theme phrase] is present as a central subject.</div>
+            </div>
+          </div>
+          <div class="sent-row">
+            <div class="sn sn-e">12</div>
+            <div>
+              <div class="sent-text">তাই বলা যায়, উদ্দীপকের সাথে "<span id="c1-s12a" class="v-empty">[book]</span>"-এর সাদৃশ্য রয়েছে। <span class="fixed-tag">fixed ending</span></div>
+              <div class="eng">So, the stem has similarity with "[book]".</div>
+            </div>
+          </div>
+
+          <div class="new-tip">Sentence 5 is now fully fixed — zero blanks. Sentence 4 no longer says "character inspired others" — it says "this idea reveals deeper truth" which works for nature, poetry, abstract, and human topics equally.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ PART D ═══════════ -->
+    <div id="p-partD" class="pane">
+      <div class="pane-inner">
+        <div class="card">
+          <div class="change-legend">
+            <div class="cl-item"><div class="cl-bar" style="background:#FAEEDA;border:1px solid #EF9F27"></div>upgraded sentence</div>
+            <div class="cl-item"><div class="cl-bar" style="background:#E1F5EE;border:1px solid #5DCAA5"></div>optional insert</div>
+          </div>
+          <div class="count-row">
+            <div class="count-box">Part D <span>4 marks</span></div>
+            <div class="count-box">Paragraphs <span>4</span></div>
+            <div class="count-box">Sentences <span>20</span></div>
+          </div>
+
+          <!-- ── PARAGRAPHS 1–3: same as Part C ── -->
+          <div class="para-head"><span class="para-tag pt-1">Paragraph 1 — 1 sentence</span></div>
+          <div class="sent-row modified">
+            <div class="sn sn-f">1</div>
+            <div>
+              <div class="sent-text">উদ্দীপকে <span id="d-c1-s1a" class="v-empty">[stem]</span>-এর যে চিত্র উপস্থাপিত হয়েছে, তার সাথে "<span id="d-c1-s1b" class="v-empty">[book]</span>"-এর গভীর মিল রয়েছে। <span class="mod-tag">upgraded</span></div>
+              <div class="eng">The picture of [stem] presented in the stem has a deep similarity with "[book]".</div>
+            </div>
+          </div>
+
+          <div class="para-head"><span class="para-tag pt-2">Paragraph 2 — 6 sentences</span></div>
+          <div class="sent-row">
+            <div class="sn sn-x">2</div>
+            <div>
+              <div class="sent-text">"<span id="d-c1-s2a" class="v-empty">[book]</span>"-এ <span id="d-c1-s2b" class="v-empty">[theme phrase]</span> বিষয়টি সুন্দরভাবে তুলে ধরা হয়েছে।</div>
+              <div class="eng">In "[book]", the idea of [theme phrase] has been beautifully presented.</div>
+            </div>
+          </div>
+          <div class="sent-row modified">
+            <div class="sn sn-x">3</div>
+            <div>
+              <div class="sent-text" id="d-s3-text">সেখানে <span id="d-c1-s3a" class="v-empty">[char]</span>-এর মাধ্যমে <span id="d-c1-s3b" class="v-empty">[theme phrase]</span>-এর প্রকাশ ঘটেছে। <span class="mod-tag">upgraded</span></div>
+              <div class="eng" id="d-s3-eng">Through [char], the expression of [theme phrase] has emerged.</div>
+            </div>
+          </div>
+          <div class="sent-row modified">
+            <div class="sn sn-x">4</div>
+            <div>
+              <div class="sent-text">এই <span id="d-c1-s4a" class="v-empty">[theme phrase]</span> আমাদের জীবনের গভীর সত্যকে তুলে ধরে। <span class="mod-tag">upgraded — no character needed</span></div>
+              <div class="eng">This [theme phrase] reveals the deeper truth of our life.</div>
+            </div>
+          </div>
+          <div class="sent-row">
+            <div class="sn sn-x">5</div>
+            <div>
+              <div class="sent-text">এই ভাবটি পাঠকের মনে গভীর অনুভূতি জাগিয়ে তোলে।</div>
+              <div class="eng">This idea awakens a deep feeling in the reader's mind. ← fully fixed, zero blanks</div>
+            </div>
+          </div>
+          <div class="sent-row optional" id="d-trans-row-c2" style="display:none">
+            <div class="sn sn-o">6*</div>
+            <div>
+              <div class="sent-text"><span id="d-c1-s6ta" class="v-empty">[before]</span> থেকে <span id="d-c1-s6tb" class="v-empty">[after]</span>-এ এই পরিবর্তন <span id="d-c1-s6tc" class="v-empty">[theme phrase]</span>-এর শক্তিকে প্রমাণ করে। <span class="opt-tag">optional — use if transformation</span></div>
+              <div class="eng">[before] to [after] — this change proves the power of [theme phrase].</div>
+            </div>
+          </div>
+          <div class="sent-row" id="d-s6-normal">
+            <div class="sn sn-x">6</div>
+            <div>
+              <div class="sent-text"><span id="d-c1-s6a" class="v-empty">[book]</span>-এ এই সত্যটি অত্যন্ত প্রাসঙ্গিকভাবে উপস্থাপিত হয়েছে।</div>
+              <div class="eng">In "[book]", this truth has been presented in a very relevant way.</div>
+            </div>
+          </div>
+          <div class="sent-row">
+            <div class="sn sn-e">7</div>
+            <div>
+              <div class="sent-text">উভয় ক্ষেত্রেই <span id="d-c1-s7a" class="v-empty">[theme phrase]</span> প্রকাশ পেয়েছে। <span class="fixed-tag">fixed ending</span></div>
+              <div class="eng">In both cases, [theme phrase] has been expressed.</div>
+            </div>
+          </div>
+
+          <div class="para-head"><span class="para-tag pt-3">Paragraph 3 — 5 sentences</span></div>
+          <div class="sent-row">
+            <div class="sn sn-x">8</div>
+            <div>
+              <div class="sent-text">উদ্দীপকে <span id="d-c1-s8a" class="v-empty">[stem]</span>-এর কথা বলা হয়েছে।</div>
+              <div class="eng">In the stem, [stem] has been discussed.</div>
+            </div>
+          </div>
+          <div class="sent-row">
+            <div class="sn sn-x">9</div>
+            <div>
+              <div class="sent-text">সেখানেও <span id="d-c1-s9a" class="v-empty">[theme phrase]</span> স্পষ্টভাবে অনুভব করা যায়।</div>
+              <div class="eng">There too, [theme phrase] can be clearly felt.</div>
+            </div>
+          </div>
+          <div class="sent-row modified">
+            <div class="sn sn-x">10</div>
+            <div>
+              <div class="sent-text">একইভাবে "<span id="d-c1-s10a" class="v-empty">[book]</span>"-এও <span id="d-c1-s10b" class="v-empty">[theme phrase]</span>-এর এই রূপ দেখা যায়। <span class="mod-tag">upgraded — removed character dependency</span></div>
+              <div class="eng">Similarly, in "[book]" too, this form of [theme phrase] is seen.</div>
+            </div>
+          </div>
+          <div class="sent-row">
+            <div class="sn sn-x">11</div>
+            <div>
+              <div class="sent-text">উদ্দীপক ও পাঠ্যপুস্তক উভয় জায়গায় <span id="d-c1-s11a" class="v-empty">[theme phrase]</span> একটি কেন্দ্রীয় বিষয় হিসেবে উপস্থিত।</div>
+              <div class="eng">In both the stem and textbook, [theme phrase] is present as a central subject.</div>
+            </div>
+          </div>
+          <div class="sent-row">
+            <div class="sn sn-e">12</div>
+            <div>
+              <div class="sent-text">তাই বলা যায়, উদ্দীপকের সাথে "<span id="d-c1-s12a" class="v-empty">[book]</span>"-এর সাদৃশ্য রয়েছে। <span class="fixed-tag">fixed ending</span></div>
+              <div class="eng">So, the stem has similarity with "[book]".</div>
+            </div>
+          </div>
+
+          <!-- ── PARAGRAPH 4: Part D only ── -->
+          <p style="font-size:13px;color:var(--ink-faint);margin:18px 0 4px;font-style:italic">↓ Part D adds this extra paragraph (sentences 13–20):</p>
+
+          <div class="para-head"><span class="para-tag pt-4">Paragraph 4 — 8 sentences</span></div>
+          <div class="sent-row">
+            <div class="sn sn-x">13</div>
+            <div>
+              <div class="sent-text">উদ্দীপকে <span id="d-s13a" class="v-empty">[stem]</span> একটি গুরুত্বপূর্ণ বিষয় হিসেবে উপস্থাপিত হয়েছে।</div>
+              <div class="eng">In the stem, [stem] has been presented as an important matter.</div>
+            </div>
+          </div>
+          <div class="sent-row">
+            <div class="sn sn-x">14</div>
+            <div>
+              <div class="sent-text">"<span id="d-s14a" class="v-empty">[book]</span>"-এও এই বিষয়টি সমানভাবে প্রকাশ পেয়েছে।</div>
+              <div class="eng">In "[book]" too, this matter has been equally expressed.</div>
+            </div>
+          </div>
+          <div class="sent-row modified">
+            <div class="sn sn-f">15</div>
+            <div>
+              <div class="sent-text" id="d-s15-text">যেমন "<span id="d-s15a" class="v-empty">[book]</span>"-এ <span id="d-s15b" class="v-empty">[theme phrase]</span> প্রকাশ পেয়েছে, তেমনি উদ্দীপকেও <span id="d-s15c" class="v-empty">[stem]</span>-এ এই একই সত্য দেখা যায়। <span class="key-tag">key sentence</span> <span class="mod-tag">upgraded — no character needed</span></div>
+              <div class="eng">Just as [theme phrase] is expressed in "[book]", the same truth is seen in [stem] of the stem too.</div>
+            </div>
+          </div>
+          <div class="sent-row modified">
+            <div class="sn sn-x">16</div>
+            <div>
+              <div class="sent-text">এই সাদৃশ্য প্রমাণ করে যে <span id="d-s16a" class="v-empty">[theme phrase]</span> কেবল একটি বিষয় নয়, এটি মানবজীবনের একটি চিরন্তন সত্য। <span class="mod-tag">upgraded — adds depth</span></div>
+              <div class="eng">This similarity proves that [theme phrase] is not just a topic — it is an eternal truth of human life.</div>
+            </div>
+          </div>
+          <div class="sent-row optional" id="trans-row-d" style="display:none">
+            <div class="sn sn-o">16*</div>
+            <div>
+              <div class="sent-text"><span id="d-s16ta" class="v-empty">[before]</span> থেকে <span id="d-s16tb" class="v-empty">[after]</span>-এ এই রূপান্তর <span id="d-s16tc" class="v-empty">[theme phrase]</span>-এর গভীরতাকে তুলে ধরে। <span class="opt-tag">optional — transformation only</span></div>
+              <div class="eng">[before] to [after] — this transformation highlights the depth of [theme phrase].</div>
+            </div>
+          </div>
+          <div class="sent-row">
+            <div class="sn sn-x">17</div>
+            <div>
+              <div class="sent-text"><span id="d-s17a" class="v-empty">[theme phrase]</span> মানুষকে, সমাজকে এবং প্রকৃতিকে একসূত্রে গেঁথে রাখে।</div>
+              <div class="eng">[Theme phrase] binds people, society and nature in one thread. ← works for all topic types</div>
+            </div>
+          </div>
+          <div class="sent-row">
+            <div class="sn sn-e">18</div>
+            <div>
+              <div class="sent-text">এই গুণ সমাজে শান্তি ও সম্প্রীতি আনে। <span class="fixed-tag">fixed — no blank</span></div>
+              <div class="eng">This quality brings peace and harmony to society.</div>
+            </div>
+          </div>
+          <div class="sent-row">
+            <div class="sn sn-x">19</div>
+            <div>
+              <div class="sent-text">তাই "<span id="d-s19a" class="v-empty">[book]</span>" এবং উদ্দীপক উভয়ই আমাদের কাছে অত্যন্ত শিক্ষণীয়।</div>
+              <div class="eng">Therefore, "[book]" and the stem are both highly instructive for us.</div>
+            </div>
+          </div>
+          <div class="sent-row">
+            <div class="sn sn-e">20</div>
+            <div>
+              <div class="sent-text">উদ্দীপক ও "<span id="d-s20a" class="v-empty">[book]</span>"-এর মধ্যে এই গভীর সাদৃশ্য সত্যিই তাৎপর্যপূর্ণ। <span class="fixed-tag">fixed ending</span></div>
+              <div class="eng">This deep similarity between the stem and "[book]" is truly significant.</div>
+            </div>
+          </div>
+
+          <div class="tip-box">Sentence 15 no longer says "character showed X" — it now says "just as [book] expresses [theme], the stem also shows the same truth." Works for nature poems, abstract topics, cultural identity — everything.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ LIVE ANSWER / PREVIEW ═══════════ -->
+    <div id="p-preview" class="pane">
+      <div class="pane-inner">
+        <div class="card">
+          <div class="preview-header">
+            <div class="marks-sw">
+              <button class="msw on" onclick="setMark('C',this)">Part C</button>
+              <button class="msw" onclick="setMark('D',this)">Part D</button>
+            </div>
+            <button class="copy-btn" id="copy-btn" onclick="copyTxt()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+              Copy answer
+            </button>
+          </div>
+          <div class="preview-area" id="preview-out">Fill your details in the first tab to see your complete answer here.</div>
+        </div>
+
+        <div class="panic-card">
+          <div class="panic-label">⚡ Panic sentence — write this if you go blank mid-exam</div>
+          <div class="panic-text">এই প্রসঙ্গে বলা যায় যে, এই বিষয়টি আমাদের জীবনে অত্যন্ত গুরুত্বপূর্ণ।</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ DEPTH PHRASES ═══════════ -->
+    <div id="p-depth" class="pane">
+      <div class="pane-inner">
+        <div class="card">
+          <div class="sec-label">Universal depth sentences — pick one, insert into sentence 5 or between 9–10</div>
+          <p style="font-size:13px;color:var(--ink-faint);margin-bottom:12px;font-style:italic">These 5 sentences each work for emotion, abstract, nature, culture, and identity. Tap one to copy it.</p>
+          <div class="depth-grid" id="depth-grid"></div>
+          <div class="new-tip" style="margin-top:14px">These are bonus inserts — use one when your answer feels too short or too generic. Each one adds depth without needing any blank filled.</div>
+        </div>
+
+        <div class="card">
+          <div class="sec-label">Theme phrase examples — upgrade from 1-word to idea phrases</div>
+          <div class="theme-compare">
+            <div class="theme-box">
+              <div class="theme-box-label bad">✗ Weak (avoid single words)</div>
+              <div class="theme-words bad">ভালোবাসা<br>সাহস<br>ত্যাগ<br>প্রকৃতি<br>সততা</div>
+            </div>
+            <div class="theme-box">
+              <div class="theme-box-label good">✓ Strong (use idea phrases)</div>
+              <div class="theme-words good">গভীর মাতৃভালোবাসার টান<br>বিপদে অদম্য সাহস<br>নিঃস্বার্থ আত্মত্যাগের মনোভাব<br>প্রকৃতির চিরন্তন রূপ পরিবর্তন<br>সততার পথে অবিচল থাকা</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end app-shell -->
+</div><!-- end app-wrapper -->
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <strong>CQ Answer System v3</strong> — Bangla Literature Exam Aid &nbsp;·&nbsp; Part C &amp; Part D Builder &nbsp;·&nbsp; Neutral template for all question types
+</footer>
+
+<script>
+let ST='', BK='', CH='', TH='', BF='', AF='', MARK='C', HAS_CHAR=true, HAS_TRANS=false, DEPTH_SEL=-1;
+
+const DEPTH_SENTENCES=[
+  {label:"Emotion / feeling", val:"মানুষের অন্তরের গভীর অনুভূতিই তাকে সত্যিকারের মানুষ করে তোলে।"},
+  {label:"Abstract / poetry",  val:"কবি এখানে বাহ্যিক রূপের আড়ালে জীবনের গভীর সত্যকে তুলে ধরেছেন।"},
+  {label:"Nature",             val:"প্রকৃতির প্রতিটি পরিবর্তন আমাদের জীবনের কোনো না কোনো সত্যকে প্রতিফলিত করে।"},
+  {label:"Culture / identity", val:"ভাষা ও সংস্কৃতি একটি জাতির পরিচয়ের মূল শিকড়, যা বিচ্ছিন্ন করা যায় না।"},
+  {label:"Universal (any topic)", val:"এই বিষয়টি কেবল একটি ঘটনা নয়, এটি মানবজীবনের একটি চিরন্তন অভিজ্ঞতা।"},
+];
+
+function buildDepthGrid(){
+  const g=document.getElementById('depth-grid');
+  g.innerHTML=DEPTH_SENTENCES.map((d,i)=>`
+    <div class="depth-pill${DEPTH_SEL===i?' sel':''}" onclick="selDepth(${i})">
+      <div class="depth-pill-label">${d.label}</div>
+      <div class="depth-pill-val">${d.val}</div>
+      <div class="copied-flash">✓ Copied</div>
+    </div>`).join('');
+}
+
+function selDepth(i){
+  DEPTH_SEL=i===DEPTH_SEL?-1:i;
+  buildDepthGrid();
+  const v=DEPTH_SEL>=0?DEPTH_SENTENCES[DEPTH_SEL].val:'';
+  if(v) navigator.clipboard.writeText(v).catch(()=>{});
+}
+
+function sw(id,btn){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab-btn').forEach(t=>t.classList.remove('on'));
+  document.getElementById('p-'+id).classList.add('on');
+  btn.classList.add('on');
+  upd();
+}
+
+function setMode(m,btn){
+  if(m==='char'){HAS_CHAR=true;document.getElementById('tog-char').classList.add('on');document.getElementById('tog-nochar').classList.remove('on');}
+  else if(m==='nochar'){HAS_CHAR=false;document.getElementById('tog-nochar').classList.add('on');document.getElementById('tog-char').classList.remove('on');}
+  else if(m==='trans'){HAS_TRANS=true;document.getElementById('tog-trans').classList.add('on');document.getElementById('tog-notrans').classList.remove('on');document.getElementById('trans-field').style.display='block';}
+  else if(m==='notrans'){HAS_TRANS=false;document.getElementById('tog-notrans').classList.add('on');document.getElementById('tog-trans').classList.remove('on');document.getElementById('trans-field').style.display='none';}
+  upd();
+}
+
+function fb(f,v){const m={stem:'i-stem',book:'i-book',char:'i-char',theme:'i-theme'};document.getElementById(m[f]).value=v;upd();}
+function fbAll(){fb('stem','উদ্দীপকের পরিস্থিতি');fb('book','এই রচনা');fb('char','কেন্দ্রীয় বিষয়');fb('theme','গভীর মানবিক অনুভূতি');}
+function setMark(m,btn){MARK=m;document.querySelectorAll('.msw').forEach(b=>b.classList.remove('on'));btn.classList.add('on');buildPreview();}
+
+function sp(val,cls){
+  if(!val||!val.trim()) return `<span class="v-empty">[?]</span>`;
+  return `<span class="${cls}">${val}</span>`;
+}
+
+function upd(){
+  ST=document.getElementById('i-stem').value.trim();
+  BK=document.getElementById('i-book').value.trim();
+  CH=document.getElementById('i-char').value.trim();
+  TH=document.getElementById('i-theme').value.trim();
+  BF=(document.getElementById('i-before')||{}).value||'';BF=BF.trim();
+  AF=(document.getElementById('i-after')||{}).value||'';AF=AF.trim();
+
+  const map={
+    // Part C
+    'c1-s1a':[ST,'v-stem'],'c1-s1b':[BK,'v-book'],
+    'c1-s2a':[BK,'v-book'],'c1-s2b':[TH,'v-theme'],
+    'c1-s3a':[CH,'v-char'],'c1-s3b':[TH,'v-theme'],
+    'c1-s4a':[TH,'v-theme'],
+    'c1-s6a':[BK,'v-book'],
+    'c1-s6ta':[BF,'v-depth'],'c1-s6tb':[AF,'v-depth'],'c1-s6tc':[TH,'v-theme'],
+    'c1-s7a':[TH,'v-theme'],
+    'c1-s8a':[ST,'v-stem'],
+    'c1-s9a':[TH,'v-theme'],
+    'c1-s10a':[BK,'v-book'],'c1-s10b':[TH,'v-theme'],
+    'c1-s11a':[TH,'v-theme'],
+    'c1-s12a':[BK,'v-book'],
+    // Part D paragraphs 1-3 duplicates
+    'd-c1-s1a':[ST,'v-stem'],'d-c1-s1b':[BK,'v-book'],
+    'd-c1-s2a':[BK,'v-book'],'d-c1-s2b':[TH,'v-theme'],
+    'd-c1-s3a':[CH,'v-char'],'d-c1-s3b':[TH,'v-theme'],
+    'd-c1-s4a':[TH,'v-theme'],
+    'd-c1-s6a':[BK,'v-book'],
+    'd-c1-s6ta':[BF,'v-depth'],'d-c1-s6tb':[AF,'v-depth'],'d-c1-s6tc':[TH,'v-theme'],
+    'd-c1-s7a':[TH,'v-theme'],
+    'd-c1-s8a':[ST,'v-stem'],
+    'd-c1-s9a':[TH,'v-theme'],
+    'd-c1-s10a':[BK,'v-book'],'d-c1-s10b':[TH,'v-theme'],
+    'd-c1-s11a':[TH,'v-theme'],
+    'd-c1-s12a':[BK,'v-book'],
+    // Part D paragraph 4
+    'd-s13a':[ST,'v-stem'],
+    'd-s14a':[BK,'v-book'],
+    'd-s15a':[BK,'v-book'],'d-s15b':[TH,'v-theme'],'d-s15c':[ST,'v-stem'],
+    'd-s16a':[TH,'v-theme'],
+    'd-s16ta':[BF,'v-depth'],'d-s16tb':[AF,'v-depth'],'d-s16tc':[TH,'v-theme'],
+    'd-s17a':[TH,'v-theme'],
+    'd-s19a':[BK,'v-book'],
+    'd-s20a':[BK,'v-book'],
+  };
+
+  for(const[id,[val,cls]] of Object.entries(map)){
+    const el=document.getElementById(id);
+    if(!el) continue;
+    if(!val){el.className='v-empty';el.textContent='[?]';}
+    else{el.className=cls;el.textContent=val;}
+  }
+
+  // Update sentence 3 in Part C
+  const s3text=document.getElementById('s3-text');
+  const s3eng=document.getElementById('s3-eng');
+  // Update sentence 3 in Part D (duplicate)
+  const ds3text=document.getElementById('d-s3-text');
+  const ds3eng=document.getElementById('d-s3-eng');
+
+  let s3html, s3engTxt;
+  if(HAS_CHAR){
+    const charV=CH||'[?]';const charCls=CH?'v-char':'v-empty';
+    const thV=TH||'[?]';const thCls=TH?'v-theme':'v-empty';
+    s3html=`সেখানে <span class="${charCls}">${charV}</span>-এর মাধ্যমে <span class="${thCls}">${thV}</span>-এর প্রকাশ ঘটেছে। <span class="mod-tag">upgraded</span>`;
+    s3engTxt='Through [char], the expression of [theme phrase] has emerged.';
+  } else {
+    const thV=TH||'[?]';const thCls=TH?'v-theme':'v-empty';
+    s3html=`এখানে <span class="${thCls}">${thV}</span>-কে একটি স্বতন্ত্র সত্তা হিসেবে উপস্থাপন করা হয়েছে। <span class="mod-tag">no-character version</span>`;
+    s3engTxt='Here, [theme phrase] is presented as an independent entity. (use when no human character exists)';
+  }
+  if(s3text) s3text.innerHTML=s3html;
+  if(s3eng) s3eng.textContent=s3engTxt;
+  if(ds3text) ds3text.innerHTML=s3html;
+  if(ds3eng) ds3eng.textContent=s3engTxt;
+
+  // Transformation rows: Part C
+  const tcr=document.getElementById('trans-row-c');
+  const s6n=document.getElementById('s6-normal');
+  if(tcr) tcr.style.display=HAS_TRANS?'flex':'none';
+  if(s6n) s6n.style.display=HAS_TRANS?'none':'flex';
+  // Transformation rows: Part D p1-3 duplicates
+  const tcr2=document.getElementById('d-trans-row-c2');
+  const ds6n=document.getElementById('d-s6-normal');
+  if(tcr2) tcr2.style.display=HAS_TRANS?'flex':'none';
+  if(ds6n) ds6n.style.display=HAS_TRANS?'none':'flex';
+  // Transformation rows: Part D p4
+  const tdr=document.getElementById('trans-row-d');
+  if(tdr) tdr.style.display=HAS_TRANS?'flex':'none';
+
+  buildPreview();
+}
+
+function s(v){ return v||'[?]'; }
+
+function buildPreview(){
+  const out=document.getElementById('preview-out');
+  if(!out) return;
+  const st=s(ST),bk=s(BK),ch=s(CH),th=s(TH),bf=s(BF),af=s(AF);
+
+  let s3;
+  if(HAS_CHAR) s3=`সেখানে ${ch}-এর মাধ্যমে ${th}-এর প্রকাশ ঘটেছে।`;
+  else s3=`এখানে ${th}-কে একটি স্বতন্ত্র সত্তা হিসেবে উপস্থাপন করা হয়েছে।`;
+
+  let s6;
+  if(HAS_TRANS) s6=`${bf} থেকে ${af}-এ এই পরিবর্তন ${th}-এর শক্তিকে প্রমাণ করে।`;
+  else s6=`${bk}-এ এই সত্যটি অত্যন্ত প্রাসঙ্গিকভাবে উপস্থাপিত হয়েছে।`;
+
+  let txt='';
+  txt+=`উদ্দীপকে ${st}-এর যে চিত্র উপস্থাপিত হয়েছে, তার সাথে "${bk}"-এর গভীর মিল রয়েছে।\n\n`;
+  txt+=`"${bk}"-এ ${th} বিষয়টি সুন্দরভাবে তুলে ধরা হয়েছে। ${s3} এই ${th} আমাদের জীবনের গভীর সত্যকে তুলে ধরে। এই ভাবটি পাঠকের মনে গভীর অনুভূতি জাগিয়ে তোলে। ${s6} উভয় ক্ষেত্রেই ${th} প্রকাশ পেয়েছে।\n\n`;
+
+  let s10=`একইভাবে "${bk}"-এও ${th}-এর এই রূপ দেখা যায়।`;
+  txt+=`উদ্দীপকে ${st}-এর কথা বলা হয়েছে। সেখানেও ${th} স্পষ্টভাবে অনুভব করা যায়। ${s10} উদ্দীপক ও পাঠ্যপুস্তক উভয় জায়গায় ${th} একটি কেন্দ্রীয় বিষয় হিসেবে উপস্থিত। তাই বলা যায়, উদ্দীপকের সাথে "${bk}"-এর সাদৃশ্য রয়েছে।`;
+
+  if(MARK==='D'){
+    let s16t=HAS_TRANS?`\n${bf} থেকে ${af}-এ এই রূপান্তর ${th}-এর গভীরতাকে তুলে ধরে।`:'';
+    txt+=`\n\nউদ্দীপকে ${st} একটি গুরুত্বপূর্ণ বিষয় হিসেবে উপস্থাপিত হয়েছে। "${bk}"-এও এই বিষয়টি সমানভাবে প্রকাশ পেয়েছে। যেমন "${bk}"-এ ${th} প্রকাশ পেয়েছে, তেমনি উদ্দীপকেও ${st}-এ এই একই সত্য দেখা যায়। এই সাদৃশ্য প্রমাণ করে যে ${th} কেবল একটি বিষয় নয়, এটি মানবজীবনের একটি চিরন্তন সত্য।${s16t} ${th} মানুষকে, সমাজকে এবং প্রকৃতিকে একসূত্রে গেঁথে রাখে। এই গুণ সমাজে শান্তি ও সম্প্রীতি আনে। তাই "${bk}" এবং উদ্দীপক উভয়ই আমাদের কাছে অত্যন্ত শিক্ষণীয়। উদ্দীপক ও "${bk}"-এর মধ্যে এই গভীর সাদৃশ্য সত্যিই তাৎপর্যপূর্ণ।`;
+  }
+  out.textContent=txt;
+}
+
+function copyTxt(){
+  const text=document.getElementById('preview-out').textContent;
+  const btn=document.getElementById('copy-btn');
+  navigator.clipboard.writeText(text).then(()=>{
+    btn.textContent='✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(()=>{
+      btn.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy answer`;
+      btn.classList.remove('copied');
+    }, 2000);
+  }).catch(()=>{});
+}
+
+buildDepthGrid();
+upd();
+</script>
+</body>
+</html>
