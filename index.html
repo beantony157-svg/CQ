@@ -870,7 +870,37 @@ body::before {
   .preview-area { font-size: 14px; }
 }
 
-/* ── SCROLL BAR STYLING ── */
+/* ── THEME TAGS ── */
+.theme-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--purple-light);
+  color: var(--purple);
+  border: 1px solid rgba(74,63,143,.25);
+  border-radius: 20px;
+  padding: 3px 10px 3px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  white-space: nowrap;
+  animation: fadeUp .15s ease both;
+}
+.theme-tag-x {
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--purple);
+  opacity: .6;
+  transition: opacity .12s;
+  padding: 0 1px;
+}
+.theme-tag-x:hover { opacity: 1; }
+#theme-tag-box:focus-within {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(26,82,118,.1);
+  background: var(--paper);
+}
+
+
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--paper-warm); }
 ::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
@@ -901,6 +931,7 @@ body::before {
       <span class="chip">Character &amp; no-character modes</span>
       <span class="chip">Transformation support</span>
       <span class="chip">5 depth phrases</span>
+      <span class="chip">1–3 theme rotation</span>
     </div>
   </div>
 </section>
@@ -1053,8 +1084,25 @@ body::before {
               <input id="i-char" placeholder="e.g. মা / প্রকৃতি / কবি" oninput="upd()">
             </div>
             <div class="field">
-              <label class="lbl-theme">Theme idea (2–5 words — not 1 word)</label>
-              <input id="i-theme" placeholder="e.g. গভীর মাতৃভালোবাসা / প্রকৃতির রূপ পরিবর্তন" oninput="upd()">
+              <label class="lbl-theme">Theme idea — up to 3 (type &amp; press Enter or +)</label>
+              <!-- hidden field keeps comma-joined value for upd() -->
+              <input type="hidden" id="i-theme">
+              <div id="theme-tag-box" style="
+                display:flex;flex-wrap:wrap;gap:6px;align-items:center;
+                min-height:38px;padding:6px 10px;
+                border:1px solid var(--rule);border-radius:var(--r-sm);
+                background:var(--paper-warm);cursor:text;
+              " onclick="document.getElementById('theme-input-live').focus()">
+                <div id="theme-tags" style="display:contents"></div>
+                <input id="theme-input-live"
+                  placeholder="type theme, press Enter"
+                  style="border:none;outline:none;background:transparent;font-size:13px;font-family:var(--font-sans);color:var(--ink);min-width:160px;flex:1;"
+                  onkeydown="themeKeydown(event)"
+                  oninput="themeTyping()">
+              </div>
+              <div style="font-size:11px;color:var(--ink-faint);margin-top:4px">
+                Press <strong>Enter</strong> or <strong>+</strong> to add · Click tag ✕ to remove · Max 3 themes
+              </div>
             </div>
           </div>
 
@@ -1450,6 +1498,85 @@ body::before {
 <script>
 let ST='', BK='', CH='', TH='', BF='', AF='', MARK='C', HAS_CHAR=true, HAS_TRANS=false, DEPTH_SEL=-1;
 
+// ── MULTI-THEME ENGINE ──────────────────────────────────────────────────────
+// Parse the theme field into up to 3 themes
+function parseThemes(raw){
+  if(!raw||!raw.trim()) return [];
+  return raw.split(',').map(t=>t.trim()).filter(Boolean).slice(0,3);
+}
+
+// Neutral replacements used to avoid repetition
+const NEUTRAL_BN = ['এই বিষয়টি','এই অনুভূতি','এই দিকটি','এই সত্যটি','এই ভাবটি'];
+let _neutralIdx = 0;
+function nextNeutral(){ return NEUTRAL_BN[_neutralIdx++ % NEUTRAL_BN.length]; }
+
+// Given a list of themes & a slot index, return the right theme string
+// slotRole: 'main' | 'alt' | 'any'
+// themeIdx: sequential counter for rotation
+function pickTheme(themes, themeIdx, slotRole){
+  if(!themes||themes.length===0) return '[?]';
+  if(themes.length===1){
+    // 1 theme: use at most 4 times, rest = neutral
+    return themes[0];
+  }
+  if(themes.length===2){
+    if(slotRole==='main') return themes[0];
+    if(slotRole==='alt')  return themes[1];
+    return themes[themeIdx%2];
+  }
+  // 3 themes: rotate
+  return themes[themeIdx%3];
+}
+
+// Build the full theme-rotation plan for the answer
+// Returns an object: { t1..t12 } for Part C, plus t13..t20 for Part D
+// Each value is the string to use for that theme slot
+function buildThemeMap(themes){
+  if(!themes||themes.length===0){
+    const e='[?]';
+    return {t1:e,t2:e,t3:e,t4:e,t5:e,t6:e,t7:e,t8:e,t9:e,t10:e,t11:e,t12:e,
+            t13:e,t14:e,t15:e,t16:e,t17:e,t18:e,t19:e,t20:e};
+  }
+  _neutralIdx=0;
+  const n=themes.length;
+  const T=(i,role)=>pickTheme(themes,i,role);
+  const N=()=>nextNeutral();
+
+  if(n===1){
+    const th=themes[0];
+    // Use exact theme 3-4 times max; rest = neutral rotation
+    // Part C sentences that get the actual theme: S2, S5, S9, S12 (key/conclusion)
+    return {
+      t1:N(),  t2:th,   t3:th,   t4:N(),
+      t5:th,   t6:N(),  t7:N(),  t8:N(),
+      t9:th,   t10:N(), t11:N(), t12:N(),
+      // Part D extra
+      t13:N(), t14:th,  t15:N(), t16:th,
+      t17:N(), t18:N(), t19:N(), t20:N()
+    };
+  }
+  if(n===2){
+    const [M,A]=themes;
+    return {
+      t1:M,    t2:M,    t3:M,    t4:A,
+      t5:A,    t6:N(),  t7:A,    t8:N(),
+      t9:M,    t10:A,   t11:N(), t12:M,
+      t13:A,   t14:M,   t15:A,   t16:M,
+      t17:N(), t18:A,   t19:N(), t20:M
+    };
+  }
+  // 3 themes
+  const [M,A1,A2]=themes;
+  return {
+    t1:M,    t2:A1,   t3:M,    t4:A2,
+    t5:A1,   t6:N(),  t7:A2,   t8:N(),
+    t9:M,    t10:A1,  t11:A2,  t12:M,
+    t13:A2,  t14:M,   t15:A1,  t16:M,
+    t17:A2,  t18:A1,  t19:N(), t20:M
+  };
+}
+// ───────────────────────────────────────────────────────────────────────────
+
 const DEPTH_SENTENCES=[
   {label:"Emotion / feeling", val:"মানুষের অন্তরের গভীর অনুভূতিই তাকে সত্যিকারের মানুষ করে তোলে।"},
   {label:"Abstract / poetry",  val:"কবি এখানে বাহ্যিক রূপের আড়ালে জীবনের গভীর সত্যকে তুলে ধরেছেন।"},
@@ -1491,8 +1618,15 @@ function setMode(m,btn){
   upd();
 }
 
-function fb(f,v){const m={stem:'i-stem',book:'i-book',char:'i-char',theme:'i-theme'};document.getElementById(m[f]).value=v;upd();}
-function fbAll(){fb('stem','উদ্দীপকের পরিস্থিতি');fb('book','এই রচনা');fb('char','কেন্দ্রীয় বিষয়');fb('theme','গভীর মানবিক অনুভূতি');}
+function fb(f,v){
+  const m={stem:'i-stem',book:'i-book',char:'i-char'};
+  if(f==='theme'){
+    if(_themeTags.length===0){ _themeTags=[v]; renderThemeTags(); }
+  } else {
+    document.getElementById(m[f]).value=v; upd();
+  }
+}
+function fbAll(){fb('stem','উদ্দীপকের পরিস্থিতি');fb('book','এই রচনা');fb('char','কেন্দ্রীয় বিষয়');if(_themeTags.length===0){_themeTags=['গভীর মানবিক অনুভূতি'];renderThemeTags();}}
 function setMark(m,btn){MARK=m;document.querySelectorAll('.msw').forEach(b=>b.classList.remove('on'));btn.classList.add('on');buildPreview();}
 
 function sp(val,cls){
@@ -1508,40 +1642,48 @@ function upd(){
   BF=(document.getElementById('i-before')||{}).value||'';BF=BF.trim();
   AF=(document.getElementById('i-after')||{}).value||'';AF=AF.trim();
 
+  // Build per-slot theme map
+  const themes=parseThemes(TH);
+  const TM=buildThemeMap(themes);
+
+  // Helper: theme span HTML
+  function thSpan(val){ return val&&val!=='[?]'?`<span class="v-theme">${val}</span>`:`<span class="v-empty">[?]</span>`; }
+  function thTxt(val){ return val&&val!=='[?]'?val:'[?]'; }
+
   const map={
     // Part C
     'c1-s1a':[ST,'v-stem'],'c1-s1b':[BK,'v-book'],
-    'c1-s2a':[BK,'v-book'],'c1-s2b':[TH,'v-theme'],
-    'c1-s3a':[CH,'v-char'],'c1-s3b':[TH,'v-theme'],
-    'c1-s4a':[TH,'v-theme'],
+    'c1-s2a':[BK,'v-book'],'c1-s2b':[TM.t2,'v-theme'],
+    'c1-s3a':[CH,'v-char'],'c1-s3b':[TM.t3,'v-theme'],
+    'c1-s4a':[TM.t4,'v-theme'],
     'c1-s6a':[BK,'v-book'],
-    'c1-s6ta':[BF,'v-depth'],'c1-s6tb':[AF,'v-depth'],'c1-s6tc':[TH,'v-theme'],
-    'c1-s7a':[TH,'v-theme'],
+    'c1-s6ta':[BF,'v-depth'],'c1-s6tb':[AF,'v-depth'],'c1-s6tc':[TM.t6,'v-theme'],
+    'c1-s7a':[TM.t7,'v-theme'],
     'c1-s8a':[ST,'v-stem'],
-    'c1-s9a':[TH,'v-theme'],
-    'c1-s10a':[BK,'v-book'],'c1-s10b':[TH,'v-theme'],
-    'c1-s11a':[TH,'v-theme'],
+    'c1-s9a':[TM.t9,'v-theme'],
+    'c1-s10a':[BK,'v-book'],'c1-s10b':[TM.t10,'v-theme'],
+    'c1-s11a':[TM.t11,'v-theme'],
     'c1-s12a':[BK,'v-book'],
     // Part D paragraphs 1-3 duplicates
     'd-c1-s1a':[ST,'v-stem'],'d-c1-s1b':[BK,'v-book'],
-    'd-c1-s2a':[BK,'v-book'],'d-c1-s2b':[TH,'v-theme'],
-    'd-c1-s3a':[CH,'v-char'],'d-c1-s3b':[TH,'v-theme'],
-    'd-c1-s4a':[TH,'v-theme'],
+    'd-c1-s2a':[BK,'v-book'],'d-c1-s2b':[TM.t2,'v-theme'],
+    'd-c1-s3a':[CH,'v-char'],'d-c1-s3b':[TM.t3,'v-theme'],
+    'd-c1-s4a':[TM.t4,'v-theme'],
     'd-c1-s6a':[BK,'v-book'],
-    'd-c1-s6ta':[BF,'v-depth'],'d-c1-s6tb':[AF,'v-depth'],'d-c1-s6tc':[TH,'v-theme'],
-    'd-c1-s7a':[TH,'v-theme'],
+    'd-c1-s6ta':[BF,'v-depth'],'d-c1-s6tb':[AF,'v-depth'],'d-c1-s6tc':[TM.t6,'v-theme'],
+    'd-c1-s7a':[TM.t7,'v-theme'],
     'd-c1-s8a':[ST,'v-stem'],
-    'd-c1-s9a':[TH,'v-theme'],
-    'd-c1-s10a':[BK,'v-book'],'d-c1-s10b':[TH,'v-theme'],
-    'd-c1-s11a':[TH,'v-theme'],
+    'd-c1-s9a':[TM.t9,'v-theme'],
+    'd-c1-s10a':[BK,'v-book'],'d-c1-s10b':[TM.t10,'v-theme'],
+    'd-c1-s11a':[TM.t11,'v-theme'],
     'd-c1-s12a':[BK,'v-book'],
     // Part D paragraph 4
     'd-s13a':[ST,'v-stem'],
     'd-s14a':[BK,'v-book'],
-    'd-s15a':[BK,'v-book'],'d-s15b':[TH,'v-theme'],'d-s15c':[ST,'v-stem'],
-    'd-s16a':[TH,'v-theme'],
-    'd-s16ta':[BF,'v-depth'],'d-s16tb':[AF,'v-depth'],'d-s16tc':[TH,'v-theme'],
-    'd-s17a':[TH,'v-theme'],
+    'd-s15a':[BK,'v-book'],'d-s15b':[TM.t15,'v-theme'],'d-s15c':[ST,'v-stem'],
+    'd-s16a':[TM.t16,'v-theme'],
+    'd-s16ta':[BF,'v-depth'],'d-s16tb':[AF,'v-depth'],'d-s16tc':[TM.t17,'v-theme'],
+    'd-s17a':[TM.t17,'v-theme'],
     'd-s19a':[BK,'v-book'],
     'd-s20a':[BK,'v-book'],
   };
@@ -1549,7 +1691,7 @@ function upd(){
   for(const[id,[val,cls]] of Object.entries(map)){
     const el=document.getElementById(id);
     if(!el) continue;
-    if(!val){el.className='v-empty';el.textContent='[?]';}
+    if(!val||val==='[?]'){el.className='v-empty';el.textContent='[?]';}
     else{el.className=cls;el.textContent=val;}
   }
 
@@ -1563,11 +1705,11 @@ function upd(){
   let s3html, s3engTxt;
   if(HAS_CHAR){
     const charV=CH||'[?]';const charCls=CH?'v-char':'v-empty';
-    const thV=TH||'[?]';const thCls=TH?'v-theme':'v-empty';
+    const thV=TM.t3||'[?]';const thCls=(TM.t3&&TM.t3!=='[?]')?'v-theme':'v-empty';
     s3html=`সেখানে <span class="${charCls}">${charV}</span>-এর মাধ্যমে <span class="${thCls}">${thV}</span>-এর প্রকাশ ঘটেছে। <span class="mod-tag">upgraded</span>`;
     s3engTxt='Through [char], the expression of [theme phrase] has emerged.';
   } else {
-    const thV=TH||'[?]';const thCls=TH?'v-theme':'v-empty';
+    const thV=TM.t3||'[?]';const thCls=(TM.t3&&TM.t3!=='[?]')?'v-theme':'v-empty';
     s3html=`এখানে <span class="${thCls}">${thV}</span>-কে একটি স্বতন্ত্র সত্তা হিসেবে উপস্থাপন করা হয়েছে। <span class="mod-tag">no-character version</span>`;
     s3engTxt='Here, [theme phrase] is presented as an independent entity. (use when no human character exists)';
   }
@@ -1590,34 +1732,39 @@ function upd(){
   const tdr=document.getElementById('trans-row-d');
   if(tdr) tdr.style.display=HAS_TRANS?'flex':'none';
 
-  buildPreview();
+  buildPreview(themes);
 }
 
 function s(v){ return v||'[?]'; }
 
-function buildPreview(){
+function buildPreview(themes){
   const out=document.getElementById('preview-out');
   if(!out) return;
-  const st=s(ST),bk=s(BK),ch=s(CH),th=s(TH),bf=s(BF),af=s(AF);
+  if(!themes) themes=parseThemes(TH);
+  const TM=buildThemeMap(themes);
+  const st=s(ST),bk=s(BK),ch=s(CH),bf=s(BF),af=s(AF);
+
+  // Helper: get theme text safely
+  function th(k){ const v=TM[k]; return (v&&v!=='[?]')?v:'[?]'; }
 
   let s3;
-  if(HAS_CHAR) s3=`সেখানে ${ch}-এর মাধ্যমে ${th}-এর প্রকাশ ঘটেছে।`;
-  else s3=`এখানে ${th}-কে একটি স্বতন্ত্র সত্তা হিসেবে উপস্থাপন করা হয়েছে।`;
+  if(HAS_CHAR) s3=`সেখানে ${ch}-এর মাধ্যমে ${th('t3')}-এর প্রকাশ ঘটেছে।`;
+  else s3=`এখানে ${th('t3')}-কে একটি স্বতন্ত্র সত্তা হিসেবে উপস্থাপন করা হয়েছে।`;
 
   let s6;
-  if(HAS_TRANS) s6=`${bf} থেকে ${af}-এ এই পরিবর্তন ${th}-এর শক্তিকে প্রমাণ করে।`;
+  if(HAS_TRANS) s6=`${bf} থেকে ${af}-এ এই পরিবর্তন ${th('t6')}-এর শক্তিকে প্রমাণ করে।`;
   else s6=`${bk}-এ এই সত্যটি অত্যন্ত প্রাসঙ্গিকভাবে উপস্থাপিত হয়েছে।`;
 
   let txt='';
   txt+=`উদ্দীপকে ${st}-এর যে চিত্র উপস্থাপিত হয়েছে, তার সাথে "${bk}"-এর গভীর মিল রয়েছে।\n\n`;
-  txt+=`"${bk}"-এ ${th} বিষয়টি সুন্দরভাবে তুলে ধরা হয়েছে। ${s3} এই ${th} আমাদের জীবনের গভীর সত্যকে তুলে ধরে। এই ভাবটি পাঠকের মনে গভীর অনুভূতি জাগিয়ে তোলে। ${s6} উভয় ক্ষেত্রেই ${th} প্রকাশ পেয়েছে।\n\n`;
+  txt+=`"${bk}"-এ ${th('t2')} বিষয়টি সুন্দরভাবে তুলে ধরা হয়েছে। ${s3} ${th('t5')} আমাদের জীবনের গভীর সত্যকে তুলে ধরে। এই ভাবটি পাঠকের মনে গভীর অনুভূতি জাগিয়ে তোলে। ${s6} উভয় ক্ষেত্রেই ${th('t9')} প্রকাশ পেয়েছে।\n\n`;
 
-  let s10=`একইভাবে "${bk}"-এও ${th}-এর এই রূপ দেখা যায়।`;
-  txt+=`উদ্দীপকে ${st}-এর কথা বলা হয়েছে। সেখানেও ${th} স্পষ্টভাবে অনুভব করা যায়। ${s10} উদ্দীপক ও পাঠ্যপুস্তক উভয় জায়গায় ${th} একটি কেন্দ্রীয় বিষয় হিসেবে উপস্থিত। তাই বলা যায়, উদ্দীপকের সাথে "${bk}"-এর সাদৃশ্য রয়েছে।`;
+  let s10=`একইভাবে "${bk}"-এও ${th('t10')}-এর এই রূপ দেখা যায়।`;
+  txt+=`উদ্দীপকে ${st}-এর কথা বলা হয়েছে। সেখানেও ${th('t11')} স্পষ্টভাবে অনুভব করা যায়। ${s10} উদ্দীপক ও পাঠ্যপুস্তক উভয় জায়গায় ${th('t12')} একটি কেন্দ্রীয় বিষয় হিসেবে উপস্থিত। তাই বলা যায়, উদ্দীপকের সাথে "${bk}"-এর সাদৃশ্য রয়েছে।`;
 
   if(MARK==='D'){
-    let s16t=HAS_TRANS?`\n${bf} থেকে ${af}-এ এই রূপান্তর ${th}-এর গভীরতাকে তুলে ধরে।`:'';
-    txt+=`\n\nউদ্দীপকে ${st} একটি গুরুত্বপূর্ণ বিষয় হিসেবে উপস্থাপিত হয়েছে। "${bk}"-এও এই বিষয়টি সমানভাবে প্রকাশ পেয়েছে। যেমন "${bk}"-এ ${th} প্রকাশ পেয়েছে, তেমনি উদ্দীপকেও ${st}-এ এই একই সত্য দেখা যায়। এই সাদৃশ্য প্রমাণ করে যে ${th} কেবল একটি বিষয় নয়, এটি মানবজীবনের একটি চিরন্তন সত্য।${s16t} ${th} মানুষকে, সমাজকে এবং প্রকৃতিকে একসূত্রে গেঁথে রাখে। এই গুণ সমাজে শান্তি ও সম্প্রীতি আনে। তাই "${bk}" এবং উদ্দীপক উভয়ই আমাদের কাছে অত্যন্ত শিক্ষণীয়। উদ্দীপক ও "${bk}"-এর মধ্যে এই গভীর সাদৃশ্য সত্যিই তাৎপর্যপূর্ণ।`;
+    let s16t=HAS_TRANS?`\n${bf} থেকে ${af}-এ এই রূপান্তর ${th('t17')}-এর গভীরতাকে তুলে ধরে।`:'';
+    txt+=`\n\nউদ্দীপকে ${st} একটি গুরুত্বপূর্ণ বিষয় হিসেবে উপস্থাপিত হয়েছে। "${bk}"-এও ${th('t14')} সমানভাবে প্রকাশ পেয়েছে। যেমন "${bk}"-এ ${th('t15')} প্রকাশ পেয়েছে, তেমনি উদ্দীপকেও ${st}-এ এই একই সত্য দেখা যায়। এই সাদৃশ্য প্রমাণ করে যে ${th('t16')} কেবল একটি বিষয় নয়, এটি মানবজীবনের একটি চিরন্তন সত্য।${s16t} ${th('t18')} মানুষকে, সমাজকে এবং প্রকৃতিকে একসূত্রে গেঁথে রাখে। এই গুণ সমাজে শান্তি ও সম্প্রীতি আনে। তাই "${bk}" এবং উদ্দীপক উভয়ই আমাদের কাছে অত্যন্ত শিক্ষণীয়। উদ্দীপক ও "${bk}"-এর মধ্যে এই গভীর সাদৃশ্য সত্যিই তাৎপর্যপূর্ণ।`;
   }
   out.textContent=txt;
 }
@@ -1635,8 +1782,62 @@ function copyTxt(){
   }).catch(()=>{});
 }
 
-buildDepthGrid();
-upd();
+// ── THEME TAG UI ──────────────────────────────────────────────────────────
+let _themeTags = [];
+
+function renderThemeTags(){
+  const container = document.getElementById('theme-tags');
+  const inp = document.getElementById('theme-input-live');
+  if(!container) return;
+  container.innerHTML = '';
+  _themeTags.forEach((tag, i) => {
+    const pill = document.createElement('span');
+    pill.className = 'theme-tag';
+    pill.innerHTML = `${tag}<span class="theme-tag-x" onclick="removeThemeTag(${i})">✕</span>`;
+    container.appendChild(pill);
+  });
+  // hide input if 3 tags reached
+  inp.style.display = _themeTags.length >= 3 ? 'none' : '';
+  inp.placeholder = _themeTags.length === 0 ? 'type theme, press Enter' : _themeTags.length < 3 ? 'add another theme…' : '';
+  // sync hidden field & trigger update
+  document.getElementById('i-theme').value = _themeTags.join(',');
+  upd();
+}
+
+function addThemeTag(val){
+  val = val.trim();
+  if(!val || _themeTags.length >= 3) return;
+  if(_themeTags.includes(val)) return;
+  _themeTags.push(val);
+  document.getElementById('theme-input-live').value = '';
+  renderThemeTags();
+}
+
+function removeThemeTag(i){
+  _themeTags.splice(i,1);
+  renderThemeTags();
+  document.getElementById('theme-input-live').focus();
+}
+
+function themeKeydown(e){
+  if(e.key === 'Enter' || e.key === '+'){
+    e.preventDefault();
+    addThemeTag(e.target.value);
+  } else if(e.key === 'Backspace' && e.target.value === '' && _themeTags.length > 0){
+    removeThemeTag(_themeTags.length - 1);
+  }
+}
+
+function themeTyping(){
+  // allow + as separator even mid-type
+  const inp = document.getElementById('theme-input-live');
+  if(inp.value.endsWith('+')){
+    addThemeTag(inp.value.slice(0,-1));
+  }
+}
+// ─────────────────────────────────────────────────────────────────────────
+
+
 </script>
 </body>
 </html>
